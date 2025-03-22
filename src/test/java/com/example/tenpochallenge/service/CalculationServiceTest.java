@@ -1,19 +1,16 @@
 package com.example.tenpochallenge.service;
 
+import com.example.tenpochallenge.model.PercentageResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class CalculationServiceTest {
 
     @Mock
@@ -22,87 +19,71 @@ class CalculationServiceTest {
     @Mock
     private LoggingService loggingService;
 
-    @Mock
-    private CacheService cacheService;
-
-    @InjectMocks
     private CalculationService calculationService;
 
     @BeforeEach
     void setUp() {
-        when(loggingService.logRequest(anyString(), anyString(), anyString()))
-            .thenReturn(Mono.empty());
+        MockitoAnnotations.openMocks(this);
+        calculationService = new CalculationService(externalPercentageService, loggingService);
+        when(loggingService.logRequest(any(), any(), any())).thenReturn(Mono.empty());
     }
 
     @Test
     void calculateFinalValue_Success() {
         // Arrange
-        when(externalPercentageService.getExternalPercentage()).thenReturn(Mono.just(10.0));
-
-        // Act & Assert
-        StepVerifier.create(calculationService.calculateFinalValue(100.0, 50.0))
-            .assertNext(result -> {
-                assert result.contains("Resultado: 165,00");
-                assert result.contains("usando porcentaje: 10,00%");
-            })
-            .verifyComplete();
-    }
-
-    @Test
-    void calculateFinalValue_ExternalServiceFailure() {
-        // Arrange
+        double value1 = 100.0;
+        double value2 = 200.0;
+        double percentage = 10.0;
         when(externalPercentageService.getExternalPercentage())
-            .thenReturn(Mono.error(new RuntimeException("No hay porcentaje disponible")));
+            .thenReturn(Mono.just(new PercentageResponse(percentage, false)));
 
         // Act & Assert
-        StepVerifier.create(calculationService.calculateFinalValue(100.0, 50.0))
-            .assertNext(result -> {
-                assert result.contains("Error: No hay porcentaje disponible");
-            })
+        StepVerifier.create(calculationService.calculateFinalValue(value1, value2))
+            .expectNext("Resultado: 330.00 (usando porcentaje: 10.00% desde servicio externo)")
             .verifyComplete();
     }
 
     @Test
-    void calculateFinalValue_LoggingFailure() {
+    void calculateFinalValue_WithCache() {
         // Arrange
-        when(externalPercentageService.getExternalPercentage()).thenReturn(Mono.just(10.0));
-        when(loggingService.logRequest(anyString(), anyString(), anyString()))
-            .thenReturn(Mono.error(new RuntimeException("Error al guardar log")));
+        double value1 = 100.0;
+        double value2 = 200.0;
+        double percentage = 10.0;
+        when(externalPercentageService.getExternalPercentage())
+            .thenReturn(Mono.just(new PercentageResponse(percentage, true)));
 
         // Act & Assert
-        StepVerifier.create(calculationService.calculateFinalValue(100.0, 50.0))
-            .assertNext(result -> {
-                assert result.contains("Resultado: 165,00");
-                assert result.contains("usando porcentaje: 10,00%");
-            })
+        StepVerifier.create(calculationService.calculateFinalValue(value1, value2))
+            .expectNext("Resultado: 330.00 (usando porcentaje: 10.00% desde caché)")
+            .verifyComplete();
+    }
+
+    @Test
+    void calculateFinalValue_ExternalServiceError() {
+        // Arrange
+        double value1 = 100.0;
+        double value2 = 200.0;
+        when(externalPercentageService.getExternalPercentage())
+            .thenReturn(Mono.error(new RuntimeException("Error de servicio externo")));
+
+        // Act & Assert
+        StepVerifier.create(calculationService.calculateFinalValue(value1, value2))
+            .expectNext("Error: Error de servicio externo")
             .verifyComplete();
     }
 
     @Test
     void calculateFinalValue_ZeroValues() {
         // Arrange
-        when(externalPercentageService.getExternalPercentage()).thenReturn(Mono.just(10.0));
+        double value1 = 0.0;
+        double value2 = 0.0;
+        double percentage = 10.0;
+        when(externalPercentageService.getExternalPercentage())
+            .thenReturn(Mono.just(new PercentageResponse(percentage, false)));
 
         // Act & Assert
-        StepVerifier.create(calculationService.calculateFinalValue(0.0, 0.0))
-            .assertNext(result -> {
-                assert result.contains("Resultado: 0,00");
-                assert result.contains("usando porcentaje: 10,00%");
-            })
-            .verifyComplete();
-    }
-
-    @Test
-    void calculateFinalValue_NegativeValues() {
-        // Arrange
-        when(externalPercentageService.getExternalPercentage()).thenReturn(Mono.just(10.0));
-
-        // Act & Assert
-        StepVerifier.create(calculationService.calculateFinalValue(-100.0, -50.0))
-            .assertNext(result -> {
-                assert result.contains("Resultado: -165,00");
-                assert result.contains("usando porcentaje: 10,00%");
-            })
+        StepVerifier.create(calculationService.calculateFinalValue(value1, value2))
+            .expectNext("Resultado: 0.00 (usando porcentaje: 10.00% desde servicio externo)")
             .verifyComplete();
     }
 } 

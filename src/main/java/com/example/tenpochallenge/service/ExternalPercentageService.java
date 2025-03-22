@@ -1,5 +1,6 @@
 package com.example.tenpochallenge.service;
 
+import com.example.tenpochallenge.model.PercentageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,23 +32,5 @@ public class ExternalPercentageService {
 						return Mono.error(new RuntimeException("No hay porcentaje disponible"));
 					})
 			);
-	}
-
-	public static class PercentageResponse {
-		private final double percentage;
-		private final boolean fromCache;
-
-		public PercentageResponse(double percentage, boolean fromCache) {
-			this.percentage = percentage;
-			this.fromCache = fromCache;
-		}
-
-		public double getPercentage() {
-			return percentage;
-		}
-
-		public boolean isFromCache() {
-			return fromCache;
-		}
 	}
 }
