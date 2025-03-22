@@ -1,28 +1,23 @@
 # Etapa de construcción
 FROM eclipse-temurin:21-jdk-alpine AS builder
 
-# Instalar dependencias necesarias
-RUN apk add --no-cache curl dos2unix
+# Instalar Maven y dependencias necesarias
+RUN apk add --no-cache maven
 
 # Establecer el directorio de trabajo
 WORKDIR /workspace/app
 
-# Copiar primero solo los archivos necesarios para Maven
-COPY mvnw .
-COPY .mvn .mvn
+# Copiar el archivo pom.xml
 COPY pom.xml .
 
-# Convertir los finales de línea y dar permisos
-RUN dos2unix mvnw && chmod +x mvnw
-
 # Descargar dependencias
-RUN ./mvnw dependency:go-offline -B
+RUN mvn dependency:go-offline -B
 
 # Copiar el resto del proyecto
 COPY src src
 
 # Compilar y empaquetar la aplicación
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # Etapa final
 FROM eclipse-temurin:21-jre-alpine
