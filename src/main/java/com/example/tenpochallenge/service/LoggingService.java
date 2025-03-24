@@ -24,8 +24,14 @@ public class LoggingService {
         return Mono.fromCallable(() -> {
             logger.debug("Intentando guardar log en PostgreSQL - Endpoint: {}, Params: {}", endpoint, parameters);
             RequestLog log = new RequestLog();
-            log.setNumber(Double.parseDouble(parameters.split(",")[0].trim()));
-            log.setPercentage(Double.parseDouble(parameters.split(",")[1].trim()));
+            
+            // Extraer los valores numéricos de los parámetros
+            String[] paramParts = parameters.split(",");
+            String value1Str = paramParts[0].trim().split("=")[1];
+            String value2Str = paramParts[1].trim().split("=")[1];
+            
+            log.setNumber(Double.parseDouble(value1Str));
+            log.setPercentage(Double.parseDouble(value2Str));
             log.setResult(response);
             log.setStatus("SUCCESS");
             log.setTimestamp(LocalDateTime.now());
