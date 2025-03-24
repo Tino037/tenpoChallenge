@@ -1,33 +1,36 @@
 package com.example.tenpochallenge.exception;
 
+import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
-import java.util.Map;
+@Component
+@Order(-2)
+public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
-@RestControllerAdvice
-public class GlobalExceptionHandler {
+    @Override
+    public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        ErrorResponse response;
+        
+        if (ex instanceof ApiException) {
+            ApiException apiException = (ApiException) ex;
+            response = new ErrorResponse(apiException.getErrorType(), apiException.getMessage());
+            exchange.getResponse().setStatusCode(apiException.getErrorType().getHttpStatus());
+        } else {
+            response = new ErrorResponse(ErrorType.INTERNAL_SERVER_ERROR);
+            exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
-    @ExceptionHandler(TooManyRequestsException.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyRequests(TooManyRequestsException e) {
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
-                "timestamp", LocalDateTime.now(),
-                "status", 429,
-                "error", "Too Many Requests",
-                "message", e.getMessage()
-        ));
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        
+        return exchange.getResponse()
+                .writeWith(Mono.just(exchange.getResponse()
+                        .bufferFactory()
+                        .wrap(response.toString().getBytes())));
     }
-
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleServerError(RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                "timestamp", LocalDateTime.now(),
-                "status", 500,
-                "error", "Internal Server Error",
-                "message", "Ocurrió un error inesperado. Intente más tarde."
-        ));
-    }
-}
+} 

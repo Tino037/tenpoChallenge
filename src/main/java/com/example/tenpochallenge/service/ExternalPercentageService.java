@@ -5,6 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @Service
 public class ExternalPercentageService {
@@ -13,6 +17,7 @@ public class ExternalPercentageService {
 	private static final double FIXED_PERCENTAGE = 10.0;
 	
 	private final CacheService cacheService;
+	private Double cachedPercentage;
 
 	public ExternalPercentageService(CacheService cacheService) {
 		this.cacheService = cacheService;
@@ -32,5 +37,26 @@ public class ExternalPercentageService {
 						return Mono.error(new RuntimeException("No hay porcentaje disponible"));
 					})
 			);
+	}
+
+	@Cacheable(value = "percentageCache")
+	public Double getPercentage() {
+		if (cachedPercentage != null) {
+			return cachedPercentage;
+		}
+
+		try {
+			// Simulación de llamada al servicio externo
+			cachedPercentage = FIXED_PERCENTAGE;
+			return cachedPercentage;
+		} catch (Exception e) {
+			throw new RuntimeException("Error al obtener el porcentaje del servicio externo", e);
+		}
+	}
+
+	@Scheduled(fixedRate = 300000) // 5 minutos
+	@CacheEvict(value = "percentageCache")
+	public void clearCache() {
+		cachedPercentage = null;
 	}
 }

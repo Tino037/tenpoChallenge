@@ -3,39 +3,37 @@ package com.example.tenpochallenge.model;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
 @Entity
-@Table(name = "request_log")
-@AllArgsConstructor
-@NoArgsConstructor
+@Table(name = "request_logs")
+@Data
 public class RequestLog {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
     @Column(nullable = false)
-    private String endpoint;
-
+    private double number;
+    
     @Column(nullable = false)
-    private String parameters;
-
+    private double percentage;
+    
     @Column(nullable = false)
-    private String response;
-
+    private String result;
+    
     @Column(nullable = false)
+    private String status;
+    
+    @Column(name = "client_ip")
+    private String clientIp;
+    
+    @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp;
-
-    public RequestLog(String endpoint, String parameters, String response, LocalDateTime timestamp) {
-        this.endpoint = endpoint;
-        this.parameters = parameters;
-        this.response = response;
-        this.timestamp = timestamp;
+    
+    @PrePersist
+    protected void onCreate() {
+        timestamp = LocalDateTime.now();
     }
-
-    // Getters y Setters
 }
