@@ -5,13 +5,6 @@ import com.example.tenpochallenge.exception.ErrorType;
 import com.example.tenpochallenge.service.CalculationService;
 import com.example.tenpochallenge.service.ExternalPercentageService;
 import com.example.tenpochallenge.service.RateLimiterService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +13,6 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/tenpo")
-@Tag(name = "Cálculo de Porcentaje", description = "API para calcular porcentajes con rate limiting")
 public class PercentageController {
 
     private static final Logger logger = LoggerFactory.getLogger(PercentageController.class);
@@ -37,44 +29,10 @@ public class PercentageController {
         this.rateLimiterService = rateLimiterService;
     }
 
-    @Operation(
-        summary = "Calcular valor con porcentaje",
-        description = "Calcula el resultado de sumar un porcentaje a un valor base. El porcentaje se obtiene de un servicio externo."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Cálculo exitoso",
-            content = @Content(schema = @Schema(type = "string"))
-        ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Los valores de entrada son inválidos (menores o iguales a 0)",
-            content = @Content(schema = @Schema(ref = "#/components/schemas/ErrorResponse"))
-        ),
-        @ApiResponse(
-            responseCode = "429",
-            description = "Se ha excedido el límite de 3 peticiones por minuto",
-            content = @Content(schema = @Schema(ref = "#/components/schemas/ErrorResponse"))
-        ),
-        @ApiResponse(
-            responseCode = "503",
-            description = "Error al comunicarse con el servicio externo de porcentajes",
-            content = @Content(schema = @Schema(ref = "#/components/schemas/ErrorResponse"))
-        ),
-        @ApiResponse(
-            responseCode = "500",
-            description = "Error interno del servidor",
-            content = @Content(schema = @Schema(ref = "#/components/schemas/ErrorResponse"))
-        )
-    })
     @GetMapping("/addPorcentage/{value1}/{value2}")
     public Mono<ResponseEntity<String>> addPercentage(
-            @Parameter(description = "Valor base para el cálculo", required = true, example = "100.0")
             @PathVariable double value1,
-            @Parameter(description = "Segundo valor para el cálculo", required = true, example = "50.0")
             @PathVariable double value2,
-            @Parameter(description = "IP del cliente para rate limiting", required = false)
             @RequestHeader(value = "X-Forwarded-For", required = false) String clientIp) {
         
         // Validar inputs

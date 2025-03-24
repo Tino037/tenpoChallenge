@@ -1,19 +1,21 @@
 package com.example.tenpochallenge.exception;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Data
-@Schema(description = "Estructura de respuesta para errores de la API")
 public class ErrorResponse {
       
-    @Schema(description = "Mensaje descriptivo del error")
-    private final String message;
+    private String message;
+    private LocalDateTime timestamp;
+    private int status;
+    private String error;
 
     public ErrorResponse(ErrorType errorType, String customMessage) {
         this.message = customMessage != null ? customMessage : errorType.getDefaultMessage();
+        this.timestamp = LocalDateTime.now();
+        this.status = errorType.getHttpStatus().value();
+        this.error = errorType.getHttpStatus().getReasonPhrase();
     }
 
     public ErrorResponse(ErrorType errorType) {

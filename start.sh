@@ -45,7 +45,7 @@ show_processing() {
 
 # Detener contenedores existentes si los hay
 echo -e "${YELLOW}Deteniendo contenedores existentes...${NC}"
-docker-compose down > /dev/null 2>&1
+docker-compose down -v > /dev/null 2>&1
 show_processing
 
 # Construir y levantar los contenedores
@@ -84,5 +84,8 @@ fi
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}    La aplicación está lista para usar    ${NC}"
 echo -e "${GREEN}========================================${NC}"
-echo -e "${YELLOW}Presione Enter para salir...${NC}"
-read 
+echo -e "${YELLOW}Presione Enter para salir o 0 para reiniciar...${NC}"
+read choice
+if [ "$choice" = "0" ]; then
+    exec "$0" "$@"
+fi 
