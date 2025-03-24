@@ -22,9 +22,7 @@ public class RateLimiterService {
         
         if (count.getCount() >= MAX_REQUESTS_PER_MINUTE) {
             throw new ApiException(
-                ErrorType.RATE_LIMIT_EXCEEDED,
-                "Se ha excedido el límite de " + MAX_REQUESTS_PER_MINUTE + " peticiones por minuto"
-            );
+                ErrorType.RATE_LIMIT_EXCEEDED);
         }
         
         count.increment();

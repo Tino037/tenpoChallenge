@@ -114,7 +114,7 @@
             const page = document.getElementById('page').value;
             const size = document.getElementById('size').value;
             try {
-                const response = await fetch(`/api/v1/history?page=${page}&size=${size}`);
+                const response = await fetch(`/info/history?page=${page}&size=${size}`);
                 const data = await response.json();
                 document.getElementById('historyResult').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             } catch (error) {
@@ -124,7 +124,7 @@
 
         async function getCacheStatus() {
             try {
-                const response = await fetch('/api/v1/cache');
+                const response = await fetch('/info/cache');
                 const data = await response.json();
                 document.getElementById('cacheResult').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
             } catch (error) {
